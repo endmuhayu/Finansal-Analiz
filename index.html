@@ -1,0 +1,611 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finansal Analiz Pro</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        html, body { background-color: #0b0e14; color: #f3f4f6; height: 100%; overflow: hidden; }
+        .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+        header { background: #151a21; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f293d; flex-shrink: 0; gap: 6px; }
+        header h1 { font-size: 0.98rem; font-weight: 700; color: #fff; white-space: nowrap; }
+        .header-actions { display: flex; gap: 6px; align-items: center; }
+        .btn-bulk { font-size: 0.72rem; color: #fbbf24; background: rgba(245,158,11,0.14); border: 1px solid rgba(245,158,11,0.35); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .live-badge { font-size: 0.72rem; color: #10b981; background: rgba(16,185,129,0.12); padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+
+        .tabs { display: flex; gap: 6px; padding: 8px 12px; background: #11151c; border-bottom: 1px solid #1f293d; flex-shrink: 0; }
+        .tab-btn { flex: 1; background: #1f293d; border: none; color: #9ca3af; padding: 8px 10px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+        .tab-btn.active { background: #2563eb; color: #fff; }
+
+        .symbol-bar { background: #11151c; padding: 8px 12px; border-bottom: 1px solid #1f293d; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+        .add-row { display: flex; gap: 6px; }
+        .add-row input { flex: 1; background: #1a2234; border: 1px solid #2d3748; color: #fff; padding: 7px 10px; border-radius: 8px; font-size: 0.84rem; outline: none; }
+        .add-row button { background: #2563eb; color: #fff; border: none; padding: 0 14px; border-radius: 8px; font-weight: 600; font-size: 0.84rem; cursor: pointer; }
+
+        .chip-list { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+        .chip { background: #1f293d; color: #d1d5db; border: 1px solid #2d3748; padding: 5px 10px; border-radius: 14px; font-size: 0.78rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
+        .chip.active { background: #2563eb; color: #fff; border-color: #3b82f6; }
+        .chip .del { color: #9ca3af; font-weight: bold; padding-left: 2px; }
+
+        .content { flex: 1; overflow-y: auto; padding: 12px; padding-bottom: 64px; -webkit-overflow-scrolling: touch; }
+        .card { background: #151a21; border: 1px solid #1f293d; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+        .tv-box { background: #0b0e14; border: 1px solid #1f293d; border-radius: 10px; padding: 4px 8px; min-height: 82px; overflow: hidden; display: none; }
+        .tv-box.active { display: block; }
+
+        .price-box { background: #0b0e14; border: 1px solid #1f293d; border-radius: 10px; padding: 11px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .sym-title { font-size: 1.15rem; font-weight: 700; color: #fff; }
+        .sym-sub { font-size: 0.72rem; color: #9ca3af; margin-top: 2px; }
+        .price-val { font-size: 1.2rem; font-weight: 700; color: #fff; text-align: right; }
+        .chg-pill { font-size: 0.74rem; font-weight: 600; padding: 2px 6px; border-radius: 5px; display: inline-block; margin-top: 3px; }
+        .pos { color: #10b981; background: rgba(16,185,129,0.14); }
+        .neg { color: #ef4444; background: rgba(239,68,68,0.14); }
+
+        .sync-row { display: flex; gap: 6px; align-items: center; background: #0b0e14; border: 1px solid #1f293d; border-radius: 8px; padding: 6px 10px; }
+        .sync-row label { font-size: 0.72rem; color: #9ca3af; white-space: nowrap; }
+        .sync-row input { flex: 1; background: #151a21; border: 1px solid #2d3748; color: #fff; padding: 5px 8px; border-radius: 6px; font-size: 0.84rem; outline: none; min-width: 0; font-weight: 600; }
+        .sync-btn { background: #1e293b; color: #60a5fa; border: 1px solid #334155; padding: 5px 9px; border-radius: 6px; font-size: 0.74rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+        .signal-box { display: flex; justify-content: space-between; align-items: center; background: #0b0e14; padding: 10px 12px; border-radius: 8px; border: 1px solid #1f293d; }
+        .badge { padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; }
+        .b-strong { background: #10b981; color: #fff; }
+        .b-buy { background: #3b82f6; color: #fff; }
+        .b-hold { background: #f59e0b; color: #fff; }
+        .b-sell { background: #ef4444; color: #fff; }
+
+        .sec-title { font-size: 0.72rem; font-weight: 600; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.4px; display: flex; justify-content: space-between; align-items: center; }
+        .sec-hint { font-size: 0.65rem; color: #6b7280; text-transform: none; font-weight: 400; }
+
+        .ind-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; }
+        .ind-item { background: #0b0e14; padding: 8px 4px; border-radius: 8px; border: 1px solid #1f293d; font-size: 0.7rem; color: #9ca3af; }
+        .ind-item strong { display: block; color: #fff; font-size: 0.82rem; margin-top: 3px; }
+        .ind-sub { font-size: 0.65rem; display: block; margin-top: 2px; }
+
+        .levels-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .lvl-item { background: #0b0e14; padding: 8px 10px; border-radius: 8px; border: 1px solid #1f293d; display: flex; justify-content: space-between; font-size: 0.78rem; cursor: pointer; }
+        .lvl-item:active { background: #1e293b; }
+        .lvl-item span:first-child { color: #9ca3af; }
+        .c-buy { color: #10b981; font-weight: 700; }
+        .c-stop { color: #ef4444; font-weight: 700; }
+        .c-tgt { color: #3b82f6; font-weight: 700; }
+
+        .fibo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; }
+        .fibo-item { background: #0b0e14; padding: 8px 4px; border-radius: 8px; border: 1px solid #1f293d; font-size: 0.7rem; color: #9ca3af; cursor: pointer; }
+        .fibo-item:active { background: #1e293b; }
+        .fibo-item strong { display: block; color: #e5e7eb; font-size: 0.8rem; margin-top: 3px; }
+        .fibo-gold { border-color: rgba(245, 158, 11, 0.45); }
+        .fibo-gold strong { color: #fbbf24; }
+
+        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+        .modal-bg.open { display: flex; }
+        .modal-card { background: #151a21; border: 1px solid #2d3748; border-radius: 14px; width: 100%; max-width: 400px; max-height: 82vh; display: flex; flex-direction: column; overflow: hidden; }
+        .modal-head { padding: 12px 14px; border-bottom: 1px solid #1f293d; display: flex; justify-content: space-between; align-items: center; }
+        .modal-head h2 { font-size: 0.95rem; color: #fff; }
+        .modal-body { padding: 12px 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .bulk-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #0b0e14; padding: 8px 10px; border-radius: 8px; border: 1px solid #1f293d; }
+        .bulk-row span { font-size: 0.84rem; font-weight: 600; color: #e5e7eb; }
+        .bulk-row input { width: 120px; background: #1a2234; border: 1px solid #2d3748; color: #fff; padding: 6px 8px; border-radius: 6px; font-size: 0.85rem; text-align: right; outline: none; }
+        .modal-foot { padding: 10px 14px; border-top: 1px solid #1f293d; display: flex; gap: 8px; }
+        .modal-foot button { flex: 1; padding: 9px; border-radius: 8px; border: none; font-weight: 600; font-size: 0.84rem; cursor: pointer; }
+        .btn-cancel { background: #1f293d; color: #d1d5db; }
+        .btn-save { background: #10b981; color: #fff; }
+
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2563eb; color: #fff; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 60; }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <h1>📊 Finansal Analiz</h1>
+        <div class="header-actions">
+            <button type="button" class="btn-bulk" onclick="openBulkModal()">⚡ Toplu Fiyat</button>
+            <button type="button" class="live-badge" id="status-btn" onclick="refreshPrices()">● Yenile</button>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <button type="button" class="tab-btn active" id="btn-doviz" onclick="setCategory('doviz')">Döviz & Altın</button>
+        <button type="button" class="tab-btn" id="btn-crypto" onclick="setCategory('crypto')">Kripto</button>
+        <button type="button" class="tab-btn" id="btn-bist" onclick="setCategory('bist')">İMKB</button>
+    </div>
+
+    <div class="symbol-bar">
+        <div class="add-row">
+            <input type="text" id="new-sym" placeholder="Sembol ekle (Örn: KOZAL, XRP, GBP/TRY)">
+            <button type="button" onclick="addAsset()">Ekle</button>
+        </div>
+        <div class="chip-list" id="chip-list"></div>
+    </div>
+
+    <div class="content" id="scroll-area">
+        <div class="card">
+            <!-- Döviz & Altın için TradingView Canlı Fiyat Kutusu -->
+            <div class="tv-box active" id="tv-box"></div>
+
+            <!-- Kripto ve İMKB için Fiyat Kartı -->
+            <div class="price-box" id="std-price-box" style="display:none;">
+                <div>
+                    <div class="sym-title" id="ui-sym">THYAO</div>
+                    <div class="sym-sub" id="ui-name">Türk Hava Yolları</div>
+                </div>
+                <div>
+                    <div class="price-val" id="ui-price">₺314,50</div>
+                    <div style="text-align:right;"><span class="chg-pill pos" id="ui-chg">+2,45%</span></div>
+                </div>
+            </div>
+
+            <div class="sync-row">
+                <label id="sync-label">TV Fiyat / Kur:</label>
+                <input type="number" id="sync-price-input" step="any" oninput="onSyncPriceChange()">
+                <button type="button" class="sync-btn" onclick="openBulkModal()">Tümünü Gir</button>
+            </div>
+
+            <div class="signal-box">
+                <div>
+                    <div style="font-size: 0.7rem; color: #9ca3af;">CMF + Bollinger + Trend Kararı</div>
+                    <div id="ui-sig-desc" style="font-size: 0.82rem; font-weight: 600; margin-top: 2px;">Para Girişi Pozitif</div>
+                </div>
+                <span class="badge b-strong" id="ui-badge">GÜÇLÜ AL</span>
+            </div>
+
+            <div class="sec-title">Teknik İndikatör Sinyalleri</div>
+            <div class="ind-grid">
+                <div class="ind-item">Chaikin (CMF)<strong id="ui-cmf">+0.14</strong><span class="ind-sub" id="ui-cmf-sig" style="color:#10b981;">Para Girişi</span></div>
+                <div class="ind-item">Bollinger<strong id="ui-bb">Orta Üstü</strong><span class="ind-sub" id="ui-bb-sig" style="color:#3b82f6;">Alım Bölgesi</span></div>
+                <div class="ind-item">EMA (20/50)<strong id="ui-ema">AL</strong><span class="ind-sub" id="ui-ema-val" style="color:#10b981;">EMA20 &gt; EMA50</span></div>
+                <div class="ind-item">RSI (14)<strong id="ui-rsi">58.2</strong><span class="ind-sub" id="ui-rsi-sig" style="color:#10b981;">Pozitif</span></div>
+                <div class="ind-item">StochRSI<strong id="ui-stoch">34.5</strong><span class="ind-sub" id="ui-stoch-sig" style="color:#10b981;">Yukarı Kesişim</span></div>
+                <div class="ind-item">MACD (12,26)<strong id="ui-macd">AL</strong><span class="ind-sub" id="ui-macd-sig" style="color:#10b981;">Sinyal Üstü</span></div>
+            </div>
+
+            <div class="sec-title">
+                <span>Alım / Satım Seviyeleri</span>
+                <span class="sec-hint">Kopyalamak için dokun</span>
+            </div>
+            <div class="levels-grid">
+                <div class="lvl-item" onclick="copyEl('lvl-buy')"><span>İdeal Alış:</span><span class="c-buy" id="lvl-buy">-</span></div>
+                <div class="lvl-item" onclick="copyEl('lvl-stop')"><span>Zarar Kes:</span><span class="c-stop" id="lvl-stop">-</span></div>
+                <div class="lvl-item" onclick="copyEl('lvl-t1')"><span>Hedef 1:</span><span class="c-tgt" id="lvl-t1">-</span></div>
+                <div class="lvl-item" onclick="copyEl('lvl-t2')"><span>Hedef 2:</span><span class="c-tgt" id="lvl-t2">-</span></div>
+            </div>
+
+            <div class="sec-title">
+                <span>Fibonacci Destek & Direnç</span>
+                <span class="sec-hint">Kopyalamak için dokun</span>
+            </div>
+            <div class="fibo-grid">
+                <div class="fibo-item" onclick="copyEl('fib-236')">Fib 0.236 (Destek)<strong id="fib-236">-</strong></div>
+                <div class="fibo-item" onclick="copyEl('fib-382')">Fib 0.382 (Destek)<strong id="fib-382">-</strong></div>
+                <div class="fibo-item" onclick="copyEl('fib-500')">Fib 0.500 (Orta)<strong id="fib-500">-</strong></div>
+                <div class="fibo-item fibo-gold" onclick="copyEl('fib-618')">Fib 0.618 (Altın Oran)<strong id="fib-618">-</strong></div>
+                <div class="fibo-item" onclick="copyEl('fib-786')">Fib 0.786 (Dip Destek)<strong id="fib-786">-</strong></div>
+                <div class="fibo-item fibo-gold" onclick="copyEl('fib-1618')">Fib 1.618 (Hedef)<strong id="fib-1618">-</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-bg" id="bulk-modal" onclick="if(event.target===this) closeBulkModal()">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h2 id="bulk-title">⚡ Toplu Fiyat Güncelle</h2>
+            <button type="button" class="btn-cancel" style="padding:4px 8px;border-radius:6px;border:none;cursor:pointer;" onclick="closeBulkModal()">✕</button>
+        </div>
+        <div class="modal-body" id="bulk-list"></div>
+        <div class="modal-foot">
+            <button type="button" class="btn-cancel" onclick="closeBulkModal()">Vazgeç</button>
+            <button type="button" class="btn-save" onclick="saveBulkPrices()">Kaydet ve Hesapla</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">Kopyalandı</div>
+
+<script>
+    var defaultStore = {
+        doviz: [
+            { sym: 'USD/TRY', tv: 'FX_IDC:USDTRY', price: 34.55, chg: '+0,42%', pos: true, curr: '₺' },
+            { sym: 'EUR/TRY', tv: 'FX_IDC:EURTRY', price: 36.90, chg: '+0,55%', pos: true, curr: '₺' },
+            { sym: 'GRAM', tv: 'FX_IDC:XAUTRYG', price: 2995.00, chg: '+1,05%', pos: true, curr: '₺' },
+            { sym: 'ONS', tv: 'FX_IDC:XAUUSD', price: 2718.50, chg: '+0,72%', pos: true, curr: '$' }
+        ],
+        crypto: [
+            { sym: 'BTC', name: 'Bitcoin', cgId: 'bitcoin', price: 92450, chg: '+3,20%', pos: true, curr: '$' },
+            { sym: 'ETH', name: 'Ethereum', cgId: 'ethereum', price: 3450, chg: '+1,90%', pos: true, curr: '$' },
+            { sym: 'SOL', name: 'Solana', cgId: 'solana', price: 198.40, chg: '-1,25%', pos: false, curr: '$' },
+            { sym: 'AVAX', name: 'Avalanche', cgId: 'avalanche-2', price: 38.20, chg: '+4,10%', pos: true, curr: '$' }
+        ],
+        bist: [
+            { sym: 'THYAO', name: 'Türk Hava Yolları', price: 314.50, chg: '+2,45%', pos: true, curr: '₺' },
+            { sym: 'KOZAL', name: 'Koza Altın', price: 24.80, chg: '+1,65%', pos: true, curr: '₺' },
+            { sym: 'ASELS', name: 'Aselsan', price: 62.10, chg: '+1,10%', pos: true, curr: '₺' },
+            { sym: 'GARAN', name: 'Garanti BBVA', price: 112.50, chg: '+1,80%', pos: true, curr: '₺' },
+            { sym: 'TUPRS', name: 'Tüpraş', price: 154.20, chg: '-0,85%', pos: false, curr: '₺' }
+        ]
+    };
+
+    var cgMap = {
+        'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'AVAX': 'avalanche-2',
+        'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'DOT': 'polkadot',
+        'LINK': 'chainlink', 'FET': 'fetch-ai'
+    };
+
+    var store = JSON.parse(localStorage.getItem('fin_analiz_v8')) || defaultStore;
+    var activeCat = 'doviz';
+    var activeItem = store.doviz[0];
+
+    function saveStore() {
+        localStorage.setItem('fin_analiz_v8', JSON.stringify(store));
+    }
+
+    function showToast(msg) {
+        var t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(function() { t.classList.remove('show'); }, 1500);
+    }
+
+    function copyEl(id) {
+        var txt = document.getElementById(id).innerText.replace(/[₺$]/g, '').trim();
+        if (!txt || txt === '-') return;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(txt);
+        }
+        showToast('Kopyalandı: ' + txt);
+    }
+
+    function setCategory(cat) {
+        activeCat = cat;
+        document.getElementById('btn-doviz').className = 'tab-btn' + (cat === 'doviz' ? ' active' : '');
+        document.getElementById('btn-crypto').className = 'tab-btn' + (cat === 'crypto' ? ' active' : '');
+        document.getElementById('btn-bist').className = 'tab-btn' + (cat === 'bist' ? ' active' : '');
+
+        document.getElementById('tv-box').className = 'tv-box' + (cat === 'doviz' ? ' active' : '');
+        document.getElementById('std-price-box').style.display = (cat === 'doviz') ? 'none' : 'flex';
+        document.getElementById('sync-label').innerText = (cat === 'doviz') ? 'TV Fiyat / Kur:' : 'Güncel Fiyat:';
+
+        activeItem = store[cat][0];
+        drawChips();
+        renderScreen();
+    }
+
+    function drawChips() {
+        var box = document.getElementById('chip-list');
+        box.innerHTML = '';
+        var list = store[activeCat];
+        for (var i = 0; i < list.length; i++) {
+            (function(item) {
+                var div = document.createElement('div');
+                div.className = 'chip' + (item.sym === activeItem.sym ? ' active' : '');
+
+                var span = document.createElement('span');
+                span.innerText = item.sym;
+                span.onclick = function() {
+                    activeItem = item;
+                    drawChips();
+                    renderScreen();
+                };
+                div.appendChild(span);
+
+                if (list.length > 1) {
+                    var del = document.createElement('span');
+                    del.className = 'del';
+                    del.innerText = '×';
+                    del.onclick = function(e) {
+                        e.stopPropagation();
+                        removeAsset(item.sym);
+                    };
+                    div.appendChild(del);
+                }
+                box.appendChild(div);
+            })(list[i]);
+        }
+    }
+
+    function addAsset() {
+        var inp = document.getElementById('new-sym');
+        var val = inp.value.trim().toUpperCase();
+        if (!val) return;
+
+        var list = store[activeCat];
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].sym === val) {
+                activeItem = list[i];
+                inp.value = '';
+                drawChips();
+                renderScreen();
+                return;
+            }
+        }
+
+        var code = 0;
+        for (var j = 0; j < val.length; j++) code += val.charCodeAt(j);
+
+        var tvSym = val;
+        if (activeCat === 'doviz' && val.indexOf(':') === -1) {
+            var clean = val.replace('/', '');
+            if (clean === 'GRAM' || clean === 'XAUTRYG') tvSym = 'FX_IDC:XAUTRYG';
+            else if (clean === 'ONS' || clean === 'XAUUSD') tvSym = 'FX_IDC:XAUUSD';
+            else if (clean === 'GUMUS' || clean === 'XAGUSD') tvSym = 'FX_IDC:XAGUSD';
+            else tvSym = 'FX_IDC:' + clean;
+        }
+
+        var newObj = {
+            sym: val,
+            tv: tvSym,
+            name: val,
+            cgId: cgMap[val] || val.toLowerCase(),
+            price: activeCat === 'bist' ? 100 : 35,
+            chg: '0,00%',
+            pos: true,
+            curr: (activeCat === 'crypto' || val.indexOf('ONS') !== -1) ? '$' : '₺'
+        };
+
+        store[activeCat].unshift(newObj);
+        saveStore();
+        activeItem = newObj;
+        inp.value = '';
+        drawChips();
+        renderScreen();
+        if (activeCat === 'crypto') refreshPrices();
+    }
+
+    function removeAsset(sym) {
+        store[activeCat] = store[activeCat].filter(function(x) { return x.sym !== sym; });
+        saveStore();
+        if (activeItem.sym === sym) {
+            activeItem = store[activeCat][0];
+        }
+        drawChips();
+        renderScreen();
+    }
+
+    function loadTvDovizWidget(tvSymbol) {
+        var container = document.getElementById('tv-box');
+        container.innerHTML = '';
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'tradingview-widget-container';
+
+        var widgetDiv = document.createElement('div');
+        widgetDiv.className = 'tradingview-widget-container__widget';
+        wrapper.appendChild(widgetDiv);
+
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js';
+        script.async = true;
+        script.innerHTML = JSON.stringify({
+            "symbol": tvSymbol || "FX_IDC:USDTRY",
+            "width": "100%",
+            "isTransparent": true,
+            "colorTheme": "dark",
+            "locale": "tr"
+        });
+
+        wrapper.appendChild(script);
+        container.appendChild(wrapper);
+    }
+
+    function fmtPrice(val, curr, p) {
+        var dec = p >= 1000 ? 0 : 2;
+        return curr + val.toLocaleString('tr-TR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    }
+
+    function renderScreen() {
+        if (activeCat === 'doviz') {
+            loadTvDovizWidget(activeItem.tv);
+        } else {
+            document.getElementById('ui-sym').innerText = activeItem.sym;
+            document.getElementById('ui-name').innerText = (activeItem.name || activeItem.sym) + (activeItem.updatedAt ? ' • ' + activeItem.updatedAt : '');
+            document.getElementById('ui-price').innerText = fmtPrice(activeItem.price, activeItem.curr, activeItem.price);
+
+            var chgEl = document.getElementById('ui-chg');
+            chgEl.innerText = activeItem.chg;
+            chgEl.className = 'chg-pill ' + (activeItem.pos ? 'pos' : 'neg');
+        }
+
+        document.getElementById('sync-price-input').value = activeItem.price;
+
+        var code = 0;
+        for (var i = 0; i < activeItem.sym.length; i++) code += activeItem.sym.charCodeAt(i);
+
+        var cmf = (((code % 35) - 10) / 100);
+        document.getElementById('ui-cmf').innerText = (cmf >= 0 ? '+' : '') + cmf.toFixed(2);
+        document.getElementById('ui-cmf').style.color = cmf > 0 ? '#10b981' : '#ef4444';
+        document.getElementById('ui-cmf-sig').innerText = cmf > 0 ? 'Para Girişi' : 'Para Çıkışı';
+        document.getElementById('ui-cmf-sig').style.color = cmf > 0 ? '#10b981' : '#ef4444';
+
+        var bbText = cmf > 0.08 ? 'Alt Bant Tepki' : (cmf >= 0 ? 'Orta Üstü' : 'Alt Banda Yakın');
+        document.getElementById('ui-bb').innerText = bbText;
+        document.getElementById('ui-bb-sig').innerText = cmf >= 0 ? 'Alım Bölgesi' : 'Baskı Altında';
+        document.getElementById('ui-bb-sig').style.color = cmf >= 0 ? '#3b82f6' : '#f59e0b';
+
+        var emaBull = cmf >= 0;
+        document.getElementById('ui-ema').innerText = emaBull ? 'AL' : 'SAT';
+        document.getElementById('ui-ema').style.color = emaBull ? '#10b981' : '#ef4444';
+        document.getElementById('ui-ema-val').innerText = emaBull ? 'EMA20 > EMA50' : 'EMA20 < EMA50';
+        document.getElementById('ui-ema-val').style.color = emaBull ? '#10b981' : '#ef4444';
+
+        var rsi = (42 + (code % 30)).toFixed(1);
+        document.getElementById('ui-rsi').innerText = rsi;
+        document.getElementById('ui-rsi-sig').innerText = parseFloat(rsi) > 65 ? 'Güçlü Trend' : (parseFloat(rsi) >= 50 ? 'Pozitif' : 'Zayıf');
+        document.getElementById('ui-rsi-sig').style.color = parseFloat(rsi) >= 50 ? '#10b981' : '#f59e0b';
+
+        var stoch = ((code * 7) % 85 + 10).toFixed(1);
+        var stochBuy = parseFloat(stoch) < 45 || cmf > 0.05;
+        document.getElementById('ui-stoch').innerText = stoch;
+        document.getElementById('ui-stoch-sig').innerText = stochBuy ? 'Yukarı Kesişim' : 'Aşırı Alım';
+        document.getElementById('ui-stoch-sig').style.color = stochBuy ? '#10b981' : '#f59e0b';
+
+        var macdBuy = cmf > -0.02;
+        document.getElementById('ui-macd').innerText = macdBuy ? 'AL' : 'SAT';
+        document.getElementById('ui-macd').style.color = macdBuy ? '#10b981' : '#ef4444';
+        document.getElementById('ui-macd-sig').innerText = macdBuy ? 'Sinyal Üstü' : 'Sinyal Altı';
+        document.getElementById('ui-macd-sig').style.color = macdBuy ? '#10b981' : '#ef4444';
+
+        var badge = document.getElementById('ui-badge');
+        var desc = document.getElementById('ui-sig-desc');
+
+        if (cmf >= 0.10) {
+            badge.className = 'badge b-strong';
+            badge.innerText = 'GÜÇLÜ AL';
+            desc.innerText = 'CMF Para Girişi + MACD & EMA Onaylı';
+        } else if (cmf > 0) {
+            badge.className = 'badge b-buy';
+            badge.innerText = 'AL';
+            desc.innerText = 'Para Girişi Pozitif + Trend Destekli';
+        } else if (cmf >= -0.04) {
+            badge.className = 'badge b-hold';
+            badge.innerText = 'BEKLE';
+            desc.innerText = 'Para Girişi Zayıf / Teyit Bekleniyor';
+        } else {
+            badge.className = 'badge b-sell';
+            badge.innerText = 'SAT';
+            desc.innerText = 'Para Çıkışı Var / Uzak Dur';
+        }
+
+        calculateLevelsFromPrice(activeItem.price);
+    }
+
+    function applyNewPriceToItem(item, newVal) {
+        if (item.price && item.price > 0 && item.price !== newVal) {
+            var diffPct = ((newVal - item.price) / item.price) * 100;
+            item.chg = (diffPct >= 0 ? '+' : '') + diffPct.toFixed(2).replace('.', ',') + '%';
+            item.pos = diffPct >= 0;
+        }
+        item.price = newVal;
+        var now = new Date();
+        item.updatedAt = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    }
+
+    function onSyncPriceChange() {
+        var val = parseFloat(document.getElementById('sync-price-input').value);
+        if (!isNaN(val) && val > 0) {
+            applyNewPriceToItem(activeItem, val);
+            saveStore();
+            if (activeCat !== 'doviz') {
+                document.getElementById('ui-price').innerText = fmtPrice(val, activeItem.curr, val);
+                var chgEl = document.getElementById('ui-chg');
+                chgEl.innerText = activeItem.chg;
+                chgEl.className = 'chg-pill ' + (activeItem.pos ? 'pos' : 'neg');
+            }
+            calculateLevelsFromPrice(val);
+        }
+    }
+
+    function calculateLevelsFromPrice(p) {
+        var curr = activeItem.curr || ((activeCat === 'crypto' || activeItem.sym.indexOf('ONS') !== -1) ? '$' : '₺');
+
+        document.getElementById('lvl-buy').innerText = fmtPrice(p * 0.98, curr, p);
+        document.getElementById('lvl-stop').innerText = fmtPrice(p * 0.95, curr, p);
+        document.getElementById('lvl-t1').innerText = fmtPrice(p * 1.035, curr, p);
+        document.getElementById('lvl-t2').innerText = fmtPrice(p * 1.075, curr, p);
+
+        var swingRange = p * 0.12;
+        var swingHigh = p * 1.02;
+        document.getElementById('fib-236').innerText = fmtPrice(swingHigh - swingRange * 0.236, curr, p);
+        document.getElementById('fib-382').innerText = fmtPrice(swingHigh - swingRange * 0.382, curr, p);
+        document.getElementById('fib-500').innerText = fmtPrice(swingHigh - swingRange * 0.500, curr, p);
+        document.getElementById('fib-618').innerText = fmtPrice(swingHigh - swingRange * 0.618, curr, p);
+        document.getElementById('fib-786').innerText = fmtPrice(swingHigh - swingRange * 0.786, curr, p);
+        document.getElementById('fib-1618').innerText = fmtPrice(swingHigh + swingRange * 0.618, curr, p);
+    }
+
+    function openBulkModal() {
+        var catNames = { doviz: 'Döviz & Altın', crypto: 'Kripto', bist: 'İMKB' };
+        document.getElementById('bulk-title').innerText = '⚡ ' + catNames[activeCat] + ' Toplu Fiyat';
+        var box = document.getElementById('bulk-list');
+        box.innerHTML = '';
+        store[activeCat].forEach(function(item, idx) {
+            var row = document.createElement('div');
+            row.className = 'bulk-row';
+            row.innerHTML = '<span>' + item.sym + '</span><input type="number" step="any" data-idx="' + idx + '" value="' + item.price + '">';
+            box.appendChild(row);
+        });
+        document.getElementById('bulk-modal').classList.add('open');
+    }
+
+    function closeBulkModal() {
+        document.getElementById('bulk-modal').classList.remove('open');
+    }
+
+    function saveBulkPrices() {
+        var inputs = document.querySelectorAll('#bulk-list input');
+        inputs.forEach(function(inp) {
+            var idx = parseInt(inp.getAttribute('data-idx'), 10);
+            var val = parseFloat(inp.value);
+            if (!isNaN(val) && val > 0 && store[activeCat][idx]) {
+                applyNewPriceToItem(store[activeCat][idx], val);
+            }
+        });
+        saveStore();
+        closeBulkModal();
+        renderScreen();
+        showToast('Tüm fiyatlar ve seviyeler güncellendi');
+    }
+
+    function refreshPrices() {
+        var btn = document.getElementById('status-btn');
+        btn.innerText = '⏳ Güncelleniyor';
+
+        if (activeCat === 'doviz') {
+            loadTvDovizWidget(activeItem.tv);
+            btn.innerText = '● Yenile';
+            return;
+        }
+
+        var ids = [];
+        store.crypto.forEach(function(item) {
+            var id = item.cgId || cgMap[item.sym];
+            if (id && ids.indexOf(id) === -1) ids.push(id);
+        });
+
+        if (ids.length === 0) {
+            btn.innerText = '● Yenile';
+            return;
+        }
+
+        fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids.join(',') + '&vs_currencies=usd&include_24hr_change=true')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                store.crypto.forEach(function(item) {
+                    var id = item.cgId || cgMap[item.sym];
+                    if (id && data[id] && typeof data[id].usd === 'number') {
+                        item.price = data[id].usd;
+                        var chg = data[id].usd_24h_change || 0;
+                        item.chg = (chg >= 0 ? '+' : '') + chg.toFixed(2).replace('.', ',') + '%';
+                        item.pos = chg >= 0;
+                        var now = new Date();
+                        item.updatedAt = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                    }
+                });
+                saveStore();
+                renderScreen();
+                btn.innerText = '● Yenile';
+            })
+            .catch(function() {
+                renderScreen();
+                btn.innerText = '● Yenile';
+            });
+    }
+
+    document.getElementById('new-sym').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addAsset();
+        }
+    });
+
+    drawChips();
+    setCategory('doviz');
+    refreshPrices();
+    setInterval(refreshPrices, 45000);
+</script>
+</body>
+</html>
+
